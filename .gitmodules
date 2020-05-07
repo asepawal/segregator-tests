@@ -1,0 +1,6 @@
+[submodule "FreeRTOS-RISCV"]
+	path = freertos
+	url = https://github.com/asepawal/FreeRTOS-RISCV.git
+[submodule "benchmarks/beebs"]
+	path = benchmarks/beebs
+	url = https://github.com/asepawal/beebs.git
