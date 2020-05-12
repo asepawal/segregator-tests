@@ -2,3 +2,6 @@
 **/*.asm
 **/*.elf
 **/*.out
+**/*.log
+**/*.dump
+**/*.hist

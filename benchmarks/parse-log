@@ -1,0 +1,67 @@
+#!/usr/bin/python
+import sys
+
+logfile = open(sys.argv[1], 'r')
+lines = logfile.readlines()
+count = 0
+
+histogram = {}
+ins_dict = {}
+ins_dict['ld'] = ['lb','lh','lw','ld','flw','fld','lhu','lbu']
+ins_dict['st'] = ['sb','sh','sw','sd','fsw','fsd']
+ins_dict['li'] = ['li','lui','auipc','fmv','fcvt','fsgn','flt','fle','feq','fcmp','fclass','mv']
+ins_dict['arith'] = ['add','addi','sub','fadd','fsub']
+ins_dict['logic'] = ['and','or','sll','slt','sra','srl','xor','sne','not','seq']
+ins_dict['branch'] = ['beq','bge','blt','bne','bnez','jal','j']
+ins_dict['sys'] = ['sret','mret','dret','ebreak','ecall','ret','epc']
+ins_dict['csr'] = ['csr']
+ins_dict['mul'] = ['mul','fmul']
+ins_dict['div'] = ['div','rem','fdiv']
+ins_dict['others'] = ['wfi','sfence_vma','fence','sc_d','sc_w','lr_d','lr_w']
+ins_dict['nop'] = ['nop']
+
+en = -1
+idx = 0
+
+def category(ins):
+    for cat in ins_dict:
+        for ins_ in ins_dict[cat]:
+            if ins_ in ins:
+                return cat
+
+    if '0x' in ins: #special case
+        return 'sys'
+
+    return ""
+
+for line in lines:
+    if "cycle" in line:
+        en = en * -1
+        idx = line.split().index("cycle") - 2
+        continue
+
+    if en == 1:
+        arr = line.split()
+        #print arr
+        if len(arr) < idx+1:
+            continue;
+
+        ins = category(arr[idx])
+        if ins in "":
+            print line
+            assert False, "unknow instruction!!" 
+
+        if ins in histogram.keys():
+            histogram[ins]+=1
+        else:
+            histogram[ins]=1
+
+#merge
+histogram['reg'] = 0
+for key in ["li","csr","arith","logic","branch","sys"]:
+    if key in histogram:
+        histogram['reg'] += histogram[key]
+        del histogram[key]
+
+for ins in histogram:
+    print("{}={}".format(ins, histogram[ins]))

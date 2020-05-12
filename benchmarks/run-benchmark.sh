@@ -5,6 +5,7 @@
 # Fail on error
 set -e
 
+source ../../env.sh
 source ../../config.common
 
 BENCHMARKS=($(ls -d beebs/src/*/ | xargs -n 1 basename))
@@ -25,22 +26,23 @@ if [[ $RISCV_KERNEL = "freertos" ]]; then
     echo "Using FreeRTOS"
     CHIP=freertos
     BOARD=freertos
-    SPIKE="spike"
+    SPIKE="spike -l"
 else
     echo "Using Proxy Kernel"
     CHIP=generic
     BOARD=none
-    SPIKE="spike pk"
+    SPIKE="spike -l $PK"
 fi
 
 rm -rf results/*.elf
 rm -rf results/*.out
+rm -rf results/*.log
 
 # compile beebs
 cd beebs
 
 #baseline
-./configure --host=riscv64-unknown-elf --with-chip=$CHIP --with-board=$BOARD $DISABLE_BENCHMARKS
+./configure --host=riscv${RISCV_XLEN}-unknown-elf --with-chip=$CHIP --with-board=$BOARD $DISABLE_BENCHMARKS
 make clean
 make
 for i in "${BENCHMARKS[@]}"; do
@@ -50,7 +52,8 @@ for i in "${BENCHMARKS[@]}"; do
 
     cp src/$i/$i ../results/$i.elf 
     echo -n "Executing $i.."
-    ${SPIKE} ../results/$i.elf > ../results/$i.out || true
+    ${SPIKE} ../results/$i.elf 1> ../results/$i.out 2> ../results/$i.log || true
+    ../parse-log ../results/$i.log > ../results/$i.hist
     echo "done"
 done
 
